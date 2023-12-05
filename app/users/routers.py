@@ -20,7 +20,7 @@ async def get_user_or_404(user_id: int) -> User:
 @users_router.get('/', response_model=List[PydenticUserOut])
 async def get_users():
     users = await User.all()
-    return [PydenticUserOut.from_orm(user) for user in users]
+    return [PydenticUserOut.model_validate(user) for user in users]
 
 
 @users_router.post('/', response_model=PydenticUserOut)
@@ -29,13 +29,13 @@ async def create_user(user: PydenticUserIn):
     del user.password
     user_obj = await User.create(**user.model_dump(exclude_unset=True),
                                  password=hashed_password)
-    return PydenticUserOut.from_orm(user_obj)
+    return PydenticUserOut.model_validate(user_obj)
 
 
 @users_router.get('/{user_id}/', response_model=PydenticUserOut)
 async def get_user(user_id: int):
     user_obj = await get_user_or_404(user_id)
-    return await PydenticUserOut.from_orm(user_obj)
+    return await PydenticUserOut.model_validate(user_obj)
 
 
 @users_router.put('/{user_id}/', response_model=PydenticUserOut)
@@ -47,7 +47,7 @@ async def update_user(user_id: int, user: PydenticUserIn):
     for key, value in user_update_data.items():
         setattr(user_obj, key, value)
     await user_obj.save()
-    return await PydenticUserOut.from_orm(user_obj)
+    return await PydenticUserOut.model_validate(user_obj)
 
 
 @users_router.delete('/{user_id}/')
