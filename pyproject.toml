@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "employee-task-tracker"
+version = "0.1.0"
+description = ""
+authors = ["Kseniia <127607406+Kseniia-Artemova@users.noreply.github.com>"]
+readme = "README.md"
+packages = [{include = "employee_task_tracker"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+python-dotenv = "^1.0.0"
+pytest = "^7.4.3"
+fastapi = "^0.104.1"
+tortoise-orm = {extras = ["asyncpg"], version = "^0.20.0"}
+uvicorn = {extras = ["standart"], version = "^0.24.0.post1"}
+pathlib = "^1.0.1"
+aerich = "^0.7.2"
+
+
+
+[tool.aerich]
+tortoise_orm = "app.main.TORTOISE_ORM"
+location = "./migrations"
+src_folder = "./."
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
