@@ -1,10 +1,13 @@
 import os
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI
 from pathlib import Path
 
+from tortoise import Tortoise
 from tortoise.contrib.fastapi import register_tortoise
+
+from app.users.routers import users_router
 
 # путь к корневой папке проекта
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,15 +26,16 @@ TORTOISE_ORM = {
             },
     "apps": {
         "models": {
-            "models": ["app.models", "aerich.models"],
+            "models": ["app.employees.models", "app.tasks.models", "app.users.models", "aerich.models"],
             "default_connection": "default",
         },
     },
 }
 
 app = FastAPI()
-router = APIRouter()
+app.include_router(users_router, prefix='/users', tags=['users'])
 
+Tortoise.init_models(["app.users.models"], "models")
 register_tortoise(
     app,
     config=TORTOISE_ORM,

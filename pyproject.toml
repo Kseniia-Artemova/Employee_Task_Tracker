@@ -15,6 +15,8 @@ tortoise-orm = {extras = ["asyncpg"], version = "^0.20.0"}
 uvicorn = {extras = ["standart"], version = "^0.24.0.post1"}
 pathlib = "^1.0.1"
 aerich = "^0.7.2"
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+pydantic = {extras = ["email"], version = "^2.5.2"}
 
 
 
