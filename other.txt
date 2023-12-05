@@ -12,3 +12,6 @@ aerich upgrade
 
 # Откатить последнюю миграцию
 aerich downgrade
+
+# Сгенерировать секретный ключ
+openssl rand -hex 32
