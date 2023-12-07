@@ -15,3 +15,9 @@ aerich downgrade
 
 # Сгенерировать секретный ключ
 openssl rand -hex 32
+
+# Создаём суперпользователя
+python cli.py admin@gmail.com qwerty
+
+# Запуск приложения
+uvicorn app.main:app --reload
