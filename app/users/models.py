@@ -20,7 +20,7 @@ class User(Model):
     last_login = fields.DatetimeField(null=True)
     registration_date = fields.DatetimeField(auto_now_add=True)
     is_active = fields.BooleanField(default=True)
-    is_stuff = fields.BooleanField(default=False)
+    is_staff = fields.BooleanField(default=False)
     is_superuser = fields.BooleanField(default=False)
 
 
