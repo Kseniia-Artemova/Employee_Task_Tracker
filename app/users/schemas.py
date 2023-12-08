@@ -13,11 +13,11 @@ class PydenticUserRegister(BaseModel):
     last_name: str | None = None
 
     @model_validator(mode='after')
-    def check_passwords_match(cls, values):
-        pw1, pw2 = values.password, values.password2
+    def check_passwords_match(self):
+        pw1, pw2 = self.password, self.password2
         if pw1 is not None and pw2 is not None and pw1 != pw2:
             raise ValueError('Пароли не совпадают')
-        return values
+        return self
 
     class Config:
         from_attributes = True

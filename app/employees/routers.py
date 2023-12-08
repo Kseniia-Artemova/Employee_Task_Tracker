@@ -29,7 +29,7 @@ async def get_employee(employee_id: int, current_user: User = Depends(get_curren
 @employees_router.post('/', response_model=PydenticEmployeeOut)
 async def create_employee(employee: PydenticEmployeeIn, current_user: User = Depends(check_superuser_or_staff)):
     try:
-        employee_obj = await Employee.create(**employee.dict(exclude_unset=True))
+        employee_obj = await Employee.create(**employee.model_dump(exclude_unset=True))
         return PydenticEmployeeOut.model_validate(employee_obj)
     except ValidationError as exc:
         raise HTTPException(
@@ -41,12 +41,18 @@ async def create_employee(employee: PydenticEmployeeIn, current_user: User = Dep
 @employees_router.put('/{employee_id}/', response_model=PydenticEmployeeOut)
 async def update_employee(employee_id: int, employee: PydenticEmployeeIn,
                           current_user: User = Depends(check_superuser_or_staff)):
-    employee_obj = await services.get_employee_or_404(employee_id)
-    employee_update_data = employee.model_dump(exclude_unset=True)
-    for key, value in employee_update_data.items():
-        setattr(employee_obj, key, value)
-    await employee_obj.save()
-    return PydenticEmployeeOut.model_validate(employee_obj)
+    try:
+        employee_obj = await services.get_employee_or_404(employee_id)
+        employee_update_data = employee.model_dump(exclude_unset=True)
+        for key, value in employee_update_data.items():
+            setattr(employee_obj, key, value)
+        await employee_obj.save()
+        return PydenticEmployeeOut.model_validate(employee_obj)
+    except ValidationError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Ошибка валидации: {exc}"
+        )
 
 
 @employees_router.delete('/{employee_id}/')
