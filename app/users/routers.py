@@ -1,17 +1,15 @@
-import json
 from datetime import datetime
 from typing import List
 
 from fastapi import APIRouter, HTTPException, Depends
 from starlette import status
-from starlette.responses import JSONResponse, Response
+from starlette.responses import JSONResponse
 
 from app.users.auth import create_access_token, authenticate_user, Login, check_superuser_staff_or_owner, \
     check_superuser_or_staff
 from app.users.models import User
 from app.users.schemas import PydenticUserOut, PydenticUserPut, PydenticUserRegister
 from app.users import services
-from app_config import ACCESS_TOKEN_EXPIRE_MINUTES
 
 users_router = APIRouter()
 

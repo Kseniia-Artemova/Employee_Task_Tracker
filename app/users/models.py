@@ -8,7 +8,7 @@ email_validator = validators.RegexValidator(
 
 
 class User(Model):
-    """Модель пользователя"""
+    """Модель пользователя для базы данных"""
 
     id = fields.IntField(pk=True)
     email = fields.CharField(max_length=255,
@@ -22,5 +22,8 @@ class User(Model):
     is_active = fields.BooleanField(default=True)
     is_staff = fields.BooleanField(default=False)
     is_superuser = fields.BooleanField(default=False)
+
+    class Meta:
+        table = "users"
 
 
