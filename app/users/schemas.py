@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr, constr
+from pydantic import BaseModel, EmailStr, constr, model_validator, root_validator
 
 
 class PydenticUserRegister(BaseModel):
@@ -8,8 +8,19 @@ class PydenticUserRegister(BaseModel):
 
     email: EmailStr
     password: constr(max_length=255)
+    password2: constr(max_length=255)
     first_name: str | None = None
     last_name: str | None = None
+
+    @model_validator(mode='after')
+    def check_passwords_match(cls, values):
+        pw1, pw2 = values.password, values.password2
+        if pw1 is not None and pw2 is not None and pw1 != pw2:
+            raise ValueError('Пароли не совпадают')
+        return values
+
+    class Config:
+        from_attributes = True
 
 
 class PydenticUserPut(BaseModel):
@@ -21,6 +32,9 @@ class PydenticUserPut(BaseModel):
     last_name: str | None = None
     is_active: bool = None
     is_staff: bool = None
+
+    class Config:
+        from_attributes = True
 
 
 class PydenticUserOut(BaseModel):
