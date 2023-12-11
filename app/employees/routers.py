@@ -8,7 +8,7 @@ from starlette.responses import JSONResponse
 from app.employees import services
 from app.employees.models import Employee
 from app.employees.schemas import PydenticEmployeeOut, PydenticEmployeeCreate, PydenticEmployeePut
-from app.users.auth import get_current_user, check_superuser_or_staff
+from app.users.auth_utils import get_current_user, check_superuser_or_staff
 from app.users.models import User
 
 employees_router = APIRouter()

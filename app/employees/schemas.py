@@ -5,19 +5,22 @@ from pydantic import BaseModel, EmailStr, model_validator
 from app.employees.models import only_digits_validator
 
 
-class BaseEmployeeOut(BaseModel):
+class MixinFullNameEmployeeOut(BaseModel):
 
     @model_validator(mode='before')
     def calculate_full_name(self):
-        first_name = self.first_name
-        last_name = self.last_name
-        father_name = self.father_name
-        if first_name and last_name:
-            parts = [last_name, first_name]
-            if father_name:
-                parts.append(father_name)
-            self.full_name = ' '.join(parts)
-        return self
+        try:
+            first_name = self.first_name
+            last_name = self.last_name
+            father_name = self.father_name
+            if first_name and last_name:
+                parts = [last_name, first_name]
+                if father_name:
+                    parts.append(father_name)
+                self.full_name = ' '.join(parts)
+            return self
+        except AttributeError:
+            return self
 
 
 class PydenticEmployeeCreate(BaseModel):
@@ -52,7 +55,7 @@ class PydenticEmployeePut(BaseModel):
         }
 
 
-class PydenticEmployeeOut(BaseEmployeeOut):
+class PydenticEmployeeOut(MixinFullNameEmployeeOut):
     id: int
     full_name: str
     email: EmailStr
@@ -68,5 +71,6 @@ class PydenticEmployeeOut(BaseEmployeeOut):
         }
 
 
-class EmployeeForTask(BaseEmployeeOut):
-    full_name: str
+class EmployeeForTask(MixinFullNameEmployeeOut):
+    full_name: str | None = None
+    position: str | None = None

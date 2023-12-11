@@ -8,7 +8,7 @@ from pydantic import BaseModel, EmailStr
 
 from app.users.models import User
 from app.users.services import pwd_context
-from app_config import ALGORITHM, SECRET_KEY, ACCESS_TOKEN_EXPIRE_MINUTES
+from app.config import ALGORITHM, SECRET_KEY, ACCESS_TOKEN_EXPIRE_MINUTES
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -54,7 +54,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
 
 
 async def check_superuser_staff_or_owner(user_id: int, current_user: User = Security(get_current_user)) -> User:
-    if (current_user.is_superuser or current_user.is_staff or current_user.id == user_id) and current_user.is_active:
+    if current_user.is_active and any((current_user.is_superuser, current_user.is_staff, current_user.id == user_id)):
         return current_user
     raise HTTPException(status_code=403, detail="Текущее действие запрещено")
 

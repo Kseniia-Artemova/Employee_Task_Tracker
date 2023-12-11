@@ -1,3 +1,4 @@
+import logging
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -9,7 +10,7 @@ from app.employees.models import Employee
 from app.tasks import services
 from app.tasks.models import Task
 from app.tasks.schemas import PydanticTaskOut, PydanticTaskIn
-from app.users.auth import get_current_user, check_superuser_or_staff
+from app.users.auth_utils import get_current_user, check_superuser_or_staff
 from app.users.models import User
 
 tasks_router = APIRouter()
@@ -17,21 +18,25 @@ tasks_router = APIRouter()
 
 @tasks_router.get('/', response_model=List[PydanticTaskOut])
 async def get_tasks(current_user: User = Depends(get_current_user)):
-    tasks = await Task.all()
-    return [PydanticTaskOut.model_validate(task) for task in tasks]
+    tasks = await Task.all().prefetch_related('performer',
+                                              'parent_task',
+                                              'parent_task__performer')
+    return tasks
 
 
 @tasks_router.get('/{task_id}/', response_model=PydanticTaskOut)
-async def get_task(task_id: int, current_user: User = Depends(get_current_user)):
+async def get_task(task_id: int, current_user: User = Depends(get_current_user)):  # noqa: F841
     task_obj = await services.get_task_or_404(task_id)
-    return PydanticTaskOut.model_validate(task_obj)
+    return task_obj
 
 
 @tasks_router.post('/', response_model=PydanticTaskOut)
-async def create_task(task: PydanticTaskIn, current_user: User = Depends(check_superuser_or_staff)):
+async def create_task(task: PydanticTaskIn, current_user: User = Depends(check_superuser_or_staff)):  # noqa: F841
     try:
         performer = await Employee.get(id=task.performer) if task.performer else None
         parent_task = await Task.get(id=task.parent_task) if task.parent_task else None
+        if task.parent_task:
+            parent_task = await Task.get(id=task.parent_task).prefetch_related('performer')
 
         task_obj = await Task.create(
             name=task.name,
@@ -41,7 +46,7 @@ async def create_task(task: PydanticTaskIn, current_user: User = Depends(check_s
             status=task.status,
             parent_task=parent_task
         )
-        return PydanticTaskOut.model_validate(task_obj)
+        return task_obj
     except ValidationError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -53,11 +58,19 @@ async def create_task(task: PydanticTaskIn, current_user: User = Depends(check_s
 async def update_task(task_id: int, task: PydanticTaskIn, current_user: User = Depends(check_superuser_or_staff)):
     try:
         task_obj = await services.get_task_or_404(task_id)
-        task_update_data = task.model_dump(exclude_unset=True)
+
+        if task.performer:
+            task_obj.performer = await Employee.get(id=task.performer) if task.performer else None
+        if task.parent_task:
+            task_obj.parent_task = await Task.get(id=task.parent_task).prefetch_related(
+                'performer') if task.parent_task else None
+
+        task_update_data = task.model_dump(exclude_unset=True, exclude={"performer", "parent_task"})
         for key, value in task_update_data.items():
             setattr(task_obj, key, value)
         await task_obj.save()
-        return PydanticTaskOut.model_validate(task_obj)
+        await task_obj.fetch_related('performer', 'parent_task')
+        return task_obj
     except ValidationError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

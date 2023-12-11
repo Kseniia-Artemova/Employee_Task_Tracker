@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from starlette import status
 from starlette.responses import JSONResponse
 
-from app.users.auth import create_access_token, authenticate_user, Login, check_superuser_staff_or_owner, \
+from app.users.auth_utils import create_access_token, authenticate_user, Login, check_superuser_staff_or_owner, \
     check_superuser_or_staff
 from app.users.models import User
 from app.users.schemas import PydenticUserOut, PydenticUserPut, PydenticUserRegister

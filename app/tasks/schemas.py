@@ -1,6 +1,5 @@
 from datetime import datetime
 from pydantic import BaseModel, field_validator
-
 from app.employees.schemas import EmployeeForTask
 from app.employees.validators import ChoiceValidator
 
@@ -25,15 +24,30 @@ class PydanticTaskIn(BaseModel):
         from_attributes = True
 
 
+class PydanticParentTaskOut(BaseModel):
+    id: int
+    name: str
+    description: str | None = None
+    created_at: datetime
+    deadline: datetime | None = None
+    status: str
+    performer: EmployeeForTask | None = None
+
+    class Config:
+        from_attributes = True
+
+
 class PydanticTaskOut(BaseModel):
     id: int
     name: str
     description: str | None = None
     created_at: datetime
-    performer: EmployeeForTask | None = None
     deadline: datetime | None = None
     status: str
-    parent_task: int | None = None
+    performer: EmployeeForTask | None = None
+    parent_task: PydanticParentTaskOut | None = None
 
     class Config:
         from_attributes = True
+
+

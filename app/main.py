@@ -5,7 +5,7 @@ from tortoise.contrib.fastapi import register_tortoise
 from app.employees.routers import employees_router
 from app.tasks.routers import tasks_router
 from app.users.routers import users_router
-from app_config import DB_USERNAME, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME
+from app.config import DB_USERNAME, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME
 
 TORTOISE_ORM = {
     "connections": {
