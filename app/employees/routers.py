@@ -2,7 +2,6 @@ from typing import List
 
 from fastapi import APIRouter, Depends
 from starlette.responses import JSONResponse
-from tortoise.functions import Count
 from tortoise.query_utils import Prefetch
 
 from app.employees import services
@@ -18,9 +17,9 @@ employees_router = APIRouter()
 
 
 @employees_router.get('/sorted_by_tasks/')
-async def get_employees_sorted():
+async def get_employees_sorted(current_user: User = Depends(get_current_user)):
 
-    employees = await Employee.filter(taskss__status='in_progress').distinct().prefetch_related(
+    employees = await Employee.filter(taskss__status__not='completed').distinct().prefetch_related(
         Prefetch('taskss', queryset=Task.all()))
 
     # Сортировка сотрудников по количеству задач

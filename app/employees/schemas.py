@@ -73,8 +73,12 @@ class PydenticEmployeeOut(MixinFullNameEmployeeOut):
 
 
 class EmployeeForTask(MixinFullNameEmployeeOut):
-    full_name: str | None = None
-    position: str | None = None
+    id: int
+    full_name: str
+    position: str | None
+
+    class Config:
+        from_attributes = True
 
 
 class PydenticEmployeeOutWithTask(MixinFullNameEmployeeOut):
