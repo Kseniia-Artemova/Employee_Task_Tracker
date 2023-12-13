@@ -15,12 +15,6 @@ async def upgrade(db: BaseDBAsyncClient) -> str:
     "position" VARCHAR(150)
 );
 COMMENT ON TABLE "employees" IS 'Модель сотрудника для базы данных';
-CREATE TABLE IF NOT EXISTS "aerich" (
-    "id" SERIAL NOT NULL PRIMARY KEY,
-    "version" VARCHAR(255) NOT NULL,
-    "app" VARCHAR(100) NOT NULL,
-    "content" JSONB NOT NULL
-);
 CREATE TABLE IF NOT EXISTS "tasks" (
     "id" SERIAL NOT NULL PRIMARY KEY,
     "name" VARCHAR(255) NOT NULL,
@@ -28,8 +22,14 @@ CREATE TABLE IF NOT EXISTS "tasks" (
     "created_at" TIMESTAMPTZ NOT NULL  DEFAULT CURRENT_TIMESTAMP,
     "deadline" TIMESTAMPTZ,
     "status" VARCHAR(50) NOT NULL  DEFAULT 'new',
-    "parent_task_id" INT REFERENCES "tasks" ("id") ON DELETE CASCADE,
-    "performer_id" INT REFERENCES "employees" ("id") ON DELETE CASCADE
+    "parent_task_id" INT REFERENCES "tasks" ("id") ON DELETE SET NULL,
+    "performer_id" INT REFERENCES "employees" ("id") ON DELETE SET NULL
+);
+CREATE TABLE IF NOT EXISTS "aerich" (
+    "id" SERIAL NOT NULL PRIMARY KEY,
+    "version" VARCHAR(255) NOT NULL,
+    "app" VARCHAR(100) NOT NULL,
+    "content" JSONB NOT NULL
 );
 CREATE TABLE IF NOT EXISTS "users" (
     "id" SERIAL NOT NULL PRIMARY KEY,

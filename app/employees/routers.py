@@ -17,42 +17,30 @@ employees_router = APIRouter()
 @employees_router.get('/', response_model=List[PydenticEmployeeOut])
 async def get_employees(current_user: User = Depends(get_current_user)):
     employees = await Employee.all()
-    return [PydenticEmployeeOut.model_validate(employee) for employee in employees]
+    return employees
 
 
 @employees_router.get('/{employee_id}/', response_model=PydenticEmployeeOut)
 async def get_employee(employee_id: int, current_user: User = Depends(get_current_user)):
     employee_obj = await services.get_employee_or_404(employee_id)
-    return PydenticEmployeeOut.model_validate(employee_obj)
+    return employee_obj
 
 
 @employees_router.post('/', response_model=PydenticEmployeeOut)
 async def create_employee(employee: PydenticEmployeeCreate, current_user: User = Depends(check_superuser_or_staff)):
-    try:
-        employee_obj = await Employee.create(**employee.model_dump(exclude_unset=True))
-        return PydenticEmployeeOut.model_validate(employee_obj)
-    except ValidationError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Ошибка валидации: {exc}"
-        )
+    employee_obj = await Employee.create(**employee.model_dump(exclude_unset=True))
+    return employee_obj
 
 
 @employees_router.put('/{employee_id}/', response_model=PydenticEmployeeOut)
 async def update_employee(employee_id: int, employee: PydenticEmployeePut,
                           current_user: User = Depends(check_superuser_or_staff)):
-    try:
-        employee_obj = await services.get_employee_or_404(employee_id)
-        employee_update_data = employee.model_dump(exclude_unset=True)
-        for key, value in employee_update_data.items():
-            setattr(employee_obj, key, value)
-        await employee_obj.save()
-        return PydenticEmployeeOut.model_validate(employee_obj)
-    except ValidationError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Ошибка валидации: {exc}"
-        )
+    employee_obj = await services.get_employee_or_404(employee_id)
+    employee_update_data = employee.model_dump(exclude_unset=True)
+    for key, value in employee_update_data.items():
+        setattr(employee_obj, key, value)
+    await employee_obj.save()
+    return employee_obj
 
 
 @employees_router.delete('/{employee_id}/')

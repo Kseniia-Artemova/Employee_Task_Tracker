@@ -32,50 +32,40 @@ async def get_task(task_id: int, current_user: User = Depends(get_current_user))
 
 @tasks_router.post('/', response_model=PydanticTaskOut)
 async def create_task(task: PydanticTaskIn, current_user: User = Depends(check_superuser_or_staff)):  # noqa: F841
-    try:
-        performer = await Employee.get(id=task.performer) if task.performer else None
-        parent_task = await Task.get(id=task.parent_task) if task.parent_task else None
-        if task.parent_task:
-            parent_task = await Task.get(id=task.parent_task).prefetch_related('performer')
+    performer = await Employee.get(id=task.performer) if task.performer else None
+    parent_task = await Task.get(id=task.parent_task) if task.parent_task else None
+    if task.parent_task:
+        parent_task = await Task.get(id=task.parent_task).prefetch_related('performer')
 
-        task_obj = await Task.create(
-            name=task.name,
-            description=task.description,
-            performer=performer,
-            deadline=task.deadline,
-            status=task.status,
-            parent_task=parent_task
-        )
-        return task_obj
-    except ValidationError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Ошибка валидации: {exc}",
-        )
+    task_obj = await Task.create(
+        name=task.name,
+        description=task.description,
+        performer=performer,
+        deadline=task.deadline,
+        status=task.status,
+        parent_task=parent_task
+    )
+    return task_obj
 
 
 @tasks_router.put('/{task_id}/', response_model=PydanticTaskOut)
 async def update_task(task_id: int, task: PydanticTaskIn, current_user: User = Depends(check_superuser_or_staff)):
-    try:
-        task_obj = await services.get_task_or_404(task_id)
+    task_obj = await services.get_task_or_404(task_id)
 
-        if task.performer:
-            task_obj.performer = await Employee.get(id=task.performer) if task.performer else None
-        if task.parent_task:
-            task_obj.parent_task = await Task.get(id=task.parent_task).prefetch_related(
-                'performer') if task.parent_task else None
+    if task.performer:
+        task_obj.performer = await Employee.get(id=task.performer) if task.performer else None
+    if task.parent_task:
+        if task.parent_task == task_id:
+            raise ValidationError('Нельзя указывать в качестве родительской задачи саму себя')
+        task_obj.parent_task = await Task.get(id=task.parent_task).prefetch_related(
+            'performer') if task.parent_task else None
 
-        task_update_data = task.model_dump(exclude_unset=True, exclude={"performer", "parent_task"})
-        for key, value in task_update_data.items():
-            setattr(task_obj, key, value)
-        await task_obj.save()
-        await task_obj.fetch_related('performer', 'parent_task')
-        return task_obj
-    except ValidationError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Ошибка валидации: {exc}",
-        )
+    task_update_data = task.model_dump(exclude_unset=True, exclude={"performer", "parent_task"})
+    for key, value in task_update_data.items():
+        setattr(task_obj, key, value)
+    await task_obj.save()
+    await task_obj.fetch_related('performer', 'parent_task')
+    return task_obj
 
 
 @tasks_router.delete('/{task_id}/')

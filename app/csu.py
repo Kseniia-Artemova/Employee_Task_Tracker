@@ -1,9 +1,10 @@
 import asyncio
 import typer
 from tortoise import Tortoise
+
 from app.main import TORTOISE_ORM
+from app.users.auth_utils import hash_password
 from app.users.models import User
-from app.users.services import hash_password
 
 app = typer.Typer()
 

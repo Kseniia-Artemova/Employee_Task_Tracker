@@ -1,13 +1,5 @@
 from fastapi import HTTPException
-from passlib.context import CryptContext
-
 from app.users.models import User
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
-def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
 
 
 async def get_user_or_404(user_id: int) -> User:
