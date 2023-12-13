@@ -1,17 +1,39 @@
 from typing import List
 
-from starlette import status
-from tortoise.exceptions import ValidationError
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from starlette.responses import JSONResponse
+from tortoise.functions import Count
+from tortoise.query_utils import Prefetch
 
 from app.employees import services
 from app.employees.models import Employee
-from app.employees.schemas import PydenticEmployeeOut, PydenticEmployeeCreate, PydenticEmployeePut
+from app.employees.schemas import PydenticEmployeeOut, PydenticEmployeeCreate, PydenticEmployeePut, \
+    PydenticEmployeeOutWithTask
+from app.tasks.models import Task
+from app.tasks.schemas import PydanticTaskOutForEmployee
 from app.users.auth_utils import get_current_user, check_superuser_or_staff
 from app.users.models import User
 
 employees_router = APIRouter()
+
+
+@employees_router.get('/sorted_by_tasks/')
+async def get_employees_sorted():
+
+    employees = await Employee.filter(taskss__status='in_progress').distinct().prefetch_related(
+        Prefetch('taskss', queryset=Task.all()))
+
+    # Сортировка сотрудников по количеству задач
+    employees_sorted = sorted(employees, key=lambda e: len(e.taskss))
+
+    employees_with_tasks = []
+
+    for employee in employees_sorted:
+        employee_new = PydenticEmployeeOutWithTask.model_validate(employee)
+        employee_new.tasks = [PydanticTaskOutForEmployee.model_validate(task) for task in employee.taskss]
+        employees_with_tasks.append(employee_new)
+
+    return employees_with_tasks
 
 
 @employees_router.get('/', response_model=List[PydenticEmployeeOut])

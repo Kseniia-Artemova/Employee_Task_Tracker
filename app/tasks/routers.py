@@ -1,15 +1,12 @@
-import logging
 from typing import List
-
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import ValidationError
-from starlette import status
 from starlette.responses import JSONResponse
 
 from app.employees.models import Employee
 from app.tasks import services
 from app.tasks.models import Task
-from app.tasks.schemas import PydanticTaskOut, PydanticTaskIn
+from app.tasks.schemas import PydanticTaskOut, PydanticTaskCreate, PydanticTaskPut
 from app.users.auth_utils import get_current_user, check_superuser_or_staff
 from app.users.models import User
 
@@ -31,7 +28,7 @@ async def get_task(task_id: int, current_user: User = Depends(get_current_user))
 
 
 @tasks_router.post('/', response_model=PydanticTaskOut)
-async def create_task(task: PydanticTaskIn, current_user: User = Depends(check_superuser_or_staff)):  # noqa: F841
+async def create_task(task: PydanticTaskCreate, current_user: User = Depends(check_superuser_or_staff)):  # noqa: F841
     performer = await Employee.get(id=task.performer) if task.performer else None
     parent_task = await Task.get(id=task.parent_task) if task.parent_task else None
     if task.parent_task:
@@ -49,14 +46,14 @@ async def create_task(task: PydanticTaskIn, current_user: User = Depends(check_s
 
 
 @tasks_router.put('/{task_id}/', response_model=PydanticTaskOut)
-async def update_task(task_id: int, task: PydanticTaskIn, current_user: User = Depends(check_superuser_or_staff)):
+async def update_task(task_id: int, task: PydanticTaskPut, current_user: User = Depends(check_superuser_or_staff)):
     task_obj = await services.get_task_or_404(task_id)
 
     if task.performer:
         task_obj.performer = await Employee.get(id=task.performer) if task.performer else None
     if task.parent_task:
         if task.parent_task == task_id:
-            raise ValidationError('Нельзя указывать в качестве родительской задачи саму себя')
+            raise HTTPException(status_code=400, detail="Нельзя указывать в качестве родительской задачи саму себя")
         task_obj.parent_task = await Task.get(id=task.parent_task).prefetch_related(
             'performer') if task.parent_task else None
 

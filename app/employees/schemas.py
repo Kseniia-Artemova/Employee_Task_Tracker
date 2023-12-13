@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import List, Any
 
 from pydantic import BaseModel, EmailStr, model_validator
 
@@ -74,3 +75,16 @@ class PydenticEmployeeOut(MixinFullNameEmployeeOut):
 class EmployeeForTask(MixinFullNameEmployeeOut):
     full_name: str | None = None
     position: str | None = None
+
+
+class PydenticEmployeeOutWithTask(MixinFullNameEmployeeOut):
+    id: int
+    full_name: str
+    email: EmailStr
+    phone: str
+    address: str | None = None
+    position: str | None = None
+    tasks: list | None = None
+
+    class Config:
+        from_attributes = True
