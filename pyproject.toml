@@ -22,7 +22,6 @@ python-jose = "^3.3.0"
 typer = "^0.9.0"
 
 
-
 [tool.aerich]
 tortoise_orm = "app.main.TORTOISE_ORM"
 location = "./migrations"

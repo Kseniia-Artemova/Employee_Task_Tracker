@@ -13,11 +13,13 @@ aerich upgrade
 # Откатить последнюю миграцию
 aerich downgrade
 
+
+
 # Сгенерировать секретный ключ
 openssl rand -hex 32
 
 # Создаём суперпользователя
-python csu.py admin@gmail.com qwerty
+python .\scripts\csu.py admin@gmail.com qwerty
 
 # Запуск приложения
 uvicorn app.main:app --reload

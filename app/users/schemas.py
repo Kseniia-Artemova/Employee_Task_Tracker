@@ -1,10 +1,10 @@
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr, constr, model_validator, root_validator
+from pydantic import BaseModel, EmailStr, constr, model_validator
 
 
 class PydenticUserRegister(BaseModel):
-    """Модель пользователя для получения данных"""
+    """Модель пользователя для получения данных при регистрации"""
 
     email: EmailStr
     password: constr(max_length=255)
@@ -13,11 +13,13 @@ class PydenticUserRegister(BaseModel):
     last_name: str | None = None
 
     @model_validator(mode='after')
-    def check_passwords_match(cls, values):
-        pw1, pw2 = values.password, values.password2
+    def check_passwords_match(self):
+        """Проверяет, совпадают ли два пароля."""
+
+        pw1, pw2 = self.password, self.password2
         if pw1 is not None and pw2 is not None and pw1 != pw2:
             raise ValueError('Пароли не совпадают')
-        return values
+        return self
 
     class Config:
         from_attributes = True
