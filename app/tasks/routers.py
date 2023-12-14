@@ -13,7 +13,19 @@ tasks_router = APIRouter()
 
 
 @tasks_router.get('/important/')
-async def get_important_tasks(current_user: User = Depends(get_current_user)):
+async def get_important_tasks(current_user: User = Depends(get_current_user)):  # noqa: F841
+    """
+    Возвращает список задач с доступными сотрудниками.
+
+    Важная задача - задача, которая имеет родительскую задачу и не взята в работу (не имеет исполнителя).
+    Если есть полностью свободные сотрудники, то они будут указаны как возможные исполнители.
+    Если нет свободных сотрудников, то в качестве исполнителей будут указаны сотрудники с наименьшим числом задач,
+    либо сотрудник, выполняющий родительскую задачу (если он не очень загружен)
+
+    :param current_user: текущий пользователь
+    :return: список задач в формате [{Важная задача, Срок, [ФИО сотрудника]}]
+    """
+
     tasks = await Task.filter(
         status__not='completed',
         parent_task_id__isnull=False,
@@ -35,23 +47,25 @@ async def get_important_tasks(current_user: User = Depends(get_current_user)):
                 "available_employees": free_employees
             })
     else:
-        least_loaded_employee = await services.get_least_loaded_employee()
+        least_loaded_employees, min_task_count = await services.get_least_busy_employees()
         for task in tasks:
-            available_employee = await services.get_available_employee(task, least_loaded_employee)
+            parent_performer = await services.get_available_employee(task, min_task_count)
             important_tasks.append({
                 "id": task.id,
                 "name": task.name,
                 "deadline": task.deadline,
                 "parent_task": task.parent_task_id,
                 "status": task.status,
-                "available_employee": available_employee
+                "available_employee": parent_performer if parent_performer else least_loaded_employees
             })
 
     return important_tasks
 
 
 @tasks_router.get('/', response_model=List[PydanticTaskOut])
-async def get_tasks(current_user: User = Depends(get_current_user)):
+async def get_tasks(current_user: User = Depends(get_current_user)) -> List:   # noqa: F841
+    """Возвращает список всех задач"""
+
     tasks = await Task.all().prefetch_related('performer',
                                               'parent_task',
                                               'parent_task__performer')
@@ -59,13 +73,29 @@ async def get_tasks(current_user: User = Depends(get_current_user)):
 
 
 @tasks_router.get('/{task_id}/', response_model=PydanticTaskOut)
-async def get_task(task_id: int, current_user: User = Depends(get_current_user)):  # noqa: F841
+async def get_task(task_id: int, current_user: User = Depends(get_current_user)) -> Task:  # noqa: F841
+    """
+    Возвращает задачу по идентификатору
+
+    :param task_id: идентификатор задачи
+    :param current_user: текущий пользователь
+    :return: задача
+    """
+
     task_obj = await services.get_task_or_404(task_id)
     return task_obj
 
 
 @tasks_router.post('/', response_model=PydanticTaskOut)
-async def create_task(task: PydanticTaskCreate, current_user: User = Depends(check_superuser_or_staff)):  # noqa: F841
+async def create_task(task: PydanticTaskCreate, current_user: User = Depends(check_superuser_or_staff)) -> Task:  # noqa: F841
+    """
+    Создание задачи
+
+    :param task: данные о задаче
+    :param current_user: текущий пользователь
+    :return: созданная задача
+    """
+
     performer = await Employee.get(id=task.performer) if task.performer else None
     parent_task = await Task.get(id=task.parent_task).prefetch_related('performer') if task.parent_task else None
 
@@ -81,7 +111,18 @@ async def create_task(task: PydanticTaskCreate, current_user: User = Depends(che
 
 
 @tasks_router.put('/{task_id}/', response_model=PydanticTaskOut)
-async def update_task(task_id: int, task: PydanticTaskPut, current_user: User = Depends(check_superuser_or_staff)):
+async def update_task(task_id: int,
+                      task: PydanticTaskPut,
+                      current_user: User = Depends(check_superuser_or_staff)) -> Task:  # noqa: F841
+    """
+    Обновление задачи
+
+    :param task_id: идентификатор задачи
+    :param task: данные о задаче
+    :param current_user: текущий пользователь
+    :return: обновленная задача
+    """
+
     task_obj = await services.get_task_or_404(task_id)
 
     task_data = task.model_dump(exclude_unset=True)
@@ -104,7 +145,15 @@ async def update_task(task_id: int, task: PydanticTaskPut, current_user: User = 
 
 
 @tasks_router.delete('/{task_id}/')
-async def delete_task(task_id: int, current_user: User = Depends(check_superuser_or_staff)):
+async def delete_task(task_id: int, current_user: User = Depends(check_superuser_or_staff)) -> JSONResponse:  # noqa: F841
+    """
+    Удаление задачи по идентификатору
+
+    :param task_id: идентификатор задачи
+    :param current_user: текущий пользователь
+    :return: сообщение об успешном удалении
+    """
+
     task_obj = await services.get_task_or_404(task_id)
     await task_obj.delete()
     content = {'message': f'Задача {task_id} удалена'}

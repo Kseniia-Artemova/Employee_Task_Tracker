@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Any
 
 from pydantic import BaseModel, field_validator
 from app.employees.schemas import EmployeeForTask
@@ -9,6 +8,10 @@ choice_validator = ChoiceValidator(choices=('new', 'in_progress', 'completed'))
 
 
 class PydanticTaskCreate(BaseModel):
+    """
+    Модель для создания задачи
+    """
+
     name: str
     description: str | None = None
     performer: int | None = None
@@ -19,6 +22,8 @@ class PydanticTaskCreate(BaseModel):
     @field_validator('status')
     @classmethod
     def check_status(cls, value: str) -> str:
+        """Проверка на допустимый статус задачи"""
+
         choice_validator(value)
         return value
 
@@ -27,6 +32,10 @@ class PydanticTaskCreate(BaseModel):
 
 
 class PydanticTaskPut(PydanticTaskCreate):
+    """
+    Модель для обновления задачи
+    """
+
     name: str | None = None
     description: str | None = None
     performer: int | None = None
@@ -36,6 +45,10 @@ class PydanticTaskPut(PydanticTaskCreate):
 
 
 class PydanticParentTaskOut(BaseModel):
+    """
+    Модель для вывода родительской задачи
+    """
+
     id: int
     name: str
     description: str | None = None
@@ -49,6 +62,10 @@ class PydanticParentTaskOut(BaseModel):
 
 
 class PydanticTaskOut(BaseModel):
+    """
+    Модель для вывода задачи
+    """
+
     id: int
     name: str
     description: str | None = None
@@ -63,6 +80,10 @@ class PydanticTaskOut(BaseModel):
 
 
 class PydanticTaskOutForEmployee(BaseModel):
+    """
+    Модель для вывода задачи для связанного с ней сотрудника
+    """
+
     id: int
     name: str
     description: str | None = None
@@ -71,5 +92,3 @@ class PydanticTaskOutForEmployee(BaseModel):
 
     class Config:
         from_attributes = True
-
-

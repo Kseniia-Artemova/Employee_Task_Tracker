@@ -1,12 +1,13 @@
 from datetime import datetime
-from typing import List, Any
-
 from pydantic import BaseModel, EmailStr, model_validator
 
 from app.employees.models import only_digits_validator
 
 
 class MixinFullNameEmployeeOut(BaseModel):
+    """
+    Миксин для получения полного имени сотрудника
+    """
 
     @model_validator(mode='before')
     def calculate_full_name(self):
@@ -25,6 +26,10 @@ class MixinFullNameEmployeeOut(BaseModel):
 
 
 class PydenticEmployeeCreate(BaseModel):
+    """
+    Модель для создания сотрудника
+    """
+
     first_name: str
     last_name: str
     father_name: str | None = None
@@ -41,6 +46,10 @@ class PydenticEmployeeCreate(BaseModel):
 
 
 class PydenticEmployeePut(BaseModel):
+    """
+    Модель для обновления сотрудника
+    """
+
     first_name: str = None
     last_name: str = None
     father_name: str | None = None
@@ -57,6 +66,10 @@ class PydenticEmployeePut(BaseModel):
 
 
 class PydenticEmployeeOut(MixinFullNameEmployeeOut):
+    """
+    Модель для вывода информации о сотруднике
+    """
+
     id: int
     full_name: str
     email: EmailStr
@@ -73,6 +86,11 @@ class PydenticEmployeeOut(MixinFullNameEmployeeOut):
 
 
 class EmployeeForTask(MixinFullNameEmployeeOut):
+    """
+    Модель для вывода краткой информации о сотруднике,
+    связанного с задачей
+    """
+
     id: int
     full_name: str
     position: str | None
@@ -82,6 +100,10 @@ class EmployeeForTask(MixinFullNameEmployeeOut):
 
 
 class PydenticEmployeeOutWithTask(MixinFullNameEmployeeOut):
+    """
+    Модель для вывода информации о сотруднике, имеющем какие-то задачи
+    """
+
     id: int
     full_name: str
     email: EmailStr

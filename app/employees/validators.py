@@ -2,6 +2,8 @@ from tortoise.validators import Validator
 
 
 class ChoiceValidator(Validator):
+    """Валидатор для выбора одного из предложенных значений"""
+
     def __init__(self, choices: tuple) -> None:
         self.choices = choices
 

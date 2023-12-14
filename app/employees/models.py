@@ -13,7 +13,8 @@ only_digits_validator = RegexValidator(
 
 
 class Employee(Model):
-    """Модель сотрудника для базы данных"""
+    """Модель сотрудника"""
+
     id = fields.IntField(pk=True)
     first_name = fields.CharField(max_length=50)
     last_name = fields.CharField(max_length=50)
