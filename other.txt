@@ -1,0 +1,25 @@
+# Инициализация Aerich и создание файла конфигурации aerich.ini
+aerich init -t app.main.TORTOISE_ORM
+
+# Инициализация базы данных (создание таблицы для миграций)
+aerich init-db
+
+# Создание новых миграций после изменения моделей
+aerich migrate --name some_descriptive_name_for_migration
+
+# Применение миграций к базе данных
+aerich upgrade
+
+# Откатить последнюю миграцию
+aerich downgrade
+
+
+
+# Сгенерировать секретный ключ
+openssl rand -hex 32
+
+# Создаём суперпользователя
+python .\scripts\csu.py admin@gmail.com qwerty
+
+# Запуск приложения
+uvicorn app.main:app --reload
